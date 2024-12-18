@@ -7,7 +7,3 @@ VALUES (
     $1
 )
 RETURNING *;
-
--- name: DeleteUsers :many
-DELETE FROM users
-RETURNING *;

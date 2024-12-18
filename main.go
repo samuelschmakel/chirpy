@@ -36,6 +36,10 @@ func main() {
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
 	}
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
+	}
 
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -46,7 +50,7 @@ func main() {
 	apiCfg := apiconfig{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
-		platform:       os.Getenv("PLATFORM"),
+		platform:       platform,
 	}
 
 	fileSystem := http.Dir(filepathRoot)
@@ -58,7 +62,7 @@ func main() {
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidate)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
-	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUsers)
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

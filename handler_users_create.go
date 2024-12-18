@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (cfg *apiconfig) handlerCreateUsers(w http.ResponseWriter, req *http.Request) {
+func (cfg *apiconfig) handlerUsersCreate(w http.ResponseWriter, req *http.Request) {
 	type parameters struct {
 		Email string `json:"email"`
 	}
