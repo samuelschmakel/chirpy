@@ -7,3 +7,13 @@ VALUES (
     $1
 )
 RETURNING *;
+
+-- name: AddPassword :one
+UPDATE users
+SET hashed_password = $2
+WHERE id = $1
+RETURNING *;
+
+-- name: GetUserByEmail :one
+SELECT * FROM users
+WHERE email = $1;
