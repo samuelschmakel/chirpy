@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/samuelschmakel/chirpy/internal/auth"
 	"github.com/samuelschmakel/chirpy/internal/database"
 )
 
@@ -32,6 +34,21 @@ func (cfg *apiconfig) handlerChirpsCreate(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
+	// Test the user's JWT to determine its validity
+	// First, get the token:
+	tokenString, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "couldn't find token", err)
+		return
+	}
+
+	// Next, validate the token:
+	userIdClaim, err := auth.ValidateJWT(tokenString, os.Getenv("SECRET_KEY"))
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid token", err)
+		return
+	}
+
 	// Test the chirp to see if it's a valid length
 	const maxChirpLength = 140
 	if len(params.Body) > maxChirpLength {
@@ -49,7 +66,7 @@ func (cfg *apiconfig) handlerChirpsCreate(w http.ResponseWriter, req *http.Reque
 
 	chirpParams := database.CreateChirpParams{
 		Body:   params.Body,
-		UserID: params.UserID,
+		UserID: userIdClaim,
 	}
 
 	dbChirp, err := cfg.db.CreateChirp(req.Context(), chirpParams)

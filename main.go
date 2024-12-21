@@ -18,6 +18,7 @@ type apiconfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	secretkey      string
 }
 
 type User struct {
@@ -25,6 +26,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token     string    `json:"token"`
 }
 
 func main() {
@@ -51,6 +53,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       platform,
+		secretkey:      os.Getenv("SECRET_KEY"),
 	}
 
 	fileSystem := http.Dir(filepathRoot)
