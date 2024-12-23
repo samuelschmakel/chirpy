@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,13 +33,13 @@ func CheckPasswordHash(password, hash string) error {
 	return err
 }
 
-func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
+func MakeJWT(userID uuid.UUID, tokenSecret string) (string, error) {
 	secretKey := []byte(tokenSecret)
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    "chirpy",
 		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(3600 * time.Second)),
 		Subject:   userID.String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -113,4 +114,19 @@ func GetBearerToken(headers http.Header) (string, error) {
 	} else {
 		return "", fmt.Errorf("header not found")
 	}
+}
+
+func MakeRefreshToken() (string, error) {
+	// Create a byte slice of the specified size
+	size := 32
+	bytes := make([]byte, size)
+
+	// Fill the slice with secure random bytes
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	// Encode the key in base64 for easy storage and usage
+	return hex.EncodeToString(bytes), nil
 }

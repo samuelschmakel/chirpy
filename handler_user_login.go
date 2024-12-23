@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/samuelschmakel/chirpy/internal/auth"
+	"github.com/samuelschmakel/chirpy/internal/database"
 )
 
 func (cfg *apiconfig) handlerUserLogin(w http.ResponseWriter, req *http.Request) {
 	type parameters struct {
-		Email            string `json:"email"`
-		Password         string `json:"password"`
-		ExpiresInSeconds *int   `json:"expires_in_seconds"` // Optional field (pointer)
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -39,25 +38,37 @@ func (cfg *apiconfig) handlerUserLogin(w http.ResponseWriter, req *http.Request)
 	}
 
 	// Making a JWT for the user:
-	expiresIn := 3600 * time.Second
-	if params.ExpiresInSeconds != nil && *params.ExpiresInSeconds < 3600 {
-		expiresIn = time.Duration(*params.ExpiresInSeconds) * time.Second
-	}
-
-	tokenString, err := auth.MakeJWT(dbUser.ID, cfg.secretkey, expiresIn)
+	tokenString, err := auth.MakeJWT(dbUser.ID, cfg.secretkey)
 	if err != nil {
-		fmt.Println("couldn't make jwt")
+		respondWithError(w, http.StatusUnauthorized, "couldn't make jwt", err)
 		return
 	}
 
+	// Making a refresh token:
+	rTokenString, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "couldn't make refresh token", err)
+	}
+
+	// Add the refresh token to the database:
+	tokenParams := database.AddTokenParams{
+		Token:  rTokenString,
+		UserID: dbUser.ID,
+	}
+
+	_, err = cfg.db.AddToken(req.Context(), tokenParams)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "couldn't add refresh token to database", err)
+	}
+
 	user := User{
-		ID:        dbUser.ID,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
-		Email:     dbUser.Email,
-		Token:     tokenString,
+		ID:           dbUser.ID,
+		CreatedAt:    dbUser.CreatedAt,
+		UpdatedAt:    dbUser.UpdatedAt,
+		Email:        dbUser.Email,
+		Token:        tokenString,
+		RefreshToken: rTokenString,
 	}
 
 	respondWithJSON(w, http.StatusOK, user)
-
 }
