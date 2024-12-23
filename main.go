@@ -30,6 +30,10 @@ type User struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
+type tokenStruct struct {
+	Token string `json:"token"`
+}
+
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
@@ -70,7 +74,7 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsRetrieve)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerChirpRetrieve)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
-	mux.HandleFunc("POST /api/refresh", apiCfg.handlerAccessTokenCreate)
+	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerTokenRevoke)
 
 	srv := &http.Server{

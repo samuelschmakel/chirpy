@@ -6,11 +6,7 @@ import (
 	"github.com/samuelschmakel/chirpy/internal/auth"
 )
 
-type tokenStruct struct {
-	Token string `json:"token"`
-}
-
-func (cfg *apiconfig) handlerAccessTokenCreate(w http.ResponseWriter, req *http.Request) {
+func (cfg *apiconfig) handlerRefresh(w http.ResponseWriter, req *http.Request) {
 	tokenString, err := auth.GetBearerToken(req.Header)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "couldn't find token in header", err)
