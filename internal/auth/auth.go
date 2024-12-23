@@ -4,9 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -104,16 +106,17 @@ func generateSecretKey(size int) (string, error) {
 
 // I should check if the first 7 characters of the string really are "Bearer "!
 func GetBearerToken(headers http.Header) (string, error) {
-	headerName := "Authorization"
-
-	if values, ok := headers[headerName]; ok {
-		fmt.Println(headerName, "found with values: ", values)
-		substr := values[0][7:]
-		fmt.Println("length of string: ", len(values[0]))
-		return substr, nil
-	} else {
-		return "", fmt.Errorf("header not found")
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("no auth header included in request")
 	}
+
+	splitAuth := strings.Split(authHeader, " ")
+	if len(splitAuth) < 2 || splitAuth[0] != "Bearer" {
+		return "", errors.New("malformed authorization header")
+	}
+
+	return splitAuth[1], nil
 }
 
 func MakeRefreshToken() (string, error) {
