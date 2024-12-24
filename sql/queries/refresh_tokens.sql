@@ -9,9 +9,9 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetToken :one
+-- name: GetTokenFromUser :one
 SELECT * FROM refresh_tokens
-WHERE token = $1;
+WHERE user_id = $1;
 
 -- name: RevokeToken :one
 UPDATE refresh_tokens

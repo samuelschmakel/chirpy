@@ -29,7 +29,6 @@ func (cfg *apiconfig) handlerUserLogin(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	fmt.Printf("Retrieved password: %s\n", dbUser.HashedPassword)
 	err = auth.CheckPasswordHash(params.Password, dbUser.HashedPassword)
 
 	if err != nil {
@@ -69,6 +68,8 @@ func (cfg *apiconfig) handlerUserLogin(w http.ResponseWriter, req *http.Request)
 		Token:        tokenString,
 		RefreshToken: rTokenString,
 	}
+
+	fmt.Printf("user data written in response: %v", user)
 
 	respondWithJSON(w, http.StatusOK, user)
 }

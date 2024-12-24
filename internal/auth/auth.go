@@ -104,7 +104,7 @@ func generateSecretKey(size int) (string, error) {
 	return base64.StdEncoding.EncodeToString(bytes), nil
 }
 
-// I should check if the first 7 characters of the string really are "Bearer "!
+// This function returns the access token string from a HTTP header
 func GetBearerToken(headers http.Header) (string, error) {
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {

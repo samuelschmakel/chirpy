@@ -11,31 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const addPassword = `-- name: AddPassword :one
-UPDATE users
-SET hashed_password = $2
-WHERE id = $1
-RETURNING id, created_at, updated_at, email, hashed_password
-`
-
-type AddPasswordParams struct {
-	ID             uuid.UUID
-	HashedPassword string
-}
-
-func (q *Queries) AddPassword(ctx context.Context, arg AddPasswordParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, addPassword, arg.ID, arg.HashedPassword)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Email,
-		&i.HashedPassword,
-	)
-	return i, err
-}
-
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, created_at, updated_at, email)
 VALUES (
@@ -87,6 +62,56 @@ WHERE refresh_tokens.token = $1
 
 func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserFromRefreshToken, token)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const updateEmail = `-- name: UpdateEmail :one
+UPDATE users
+SET email = $1
+WHERE id = $2
+RETURNING id, created_at, updated_at, email, hashed_password
+`
+
+type UpdateEmailParams struct {
+	Email string
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateEmail(ctx context.Context, arg UpdateEmailParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateEmail, arg.Email, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const updatePassword = `-- name: UpdatePassword :one
+UPDATE users
+SET hashed_password = $2
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, hashed_password
+`
+
+type UpdatePasswordParams struct {
+	ID             uuid.UUID
+	HashedPassword string
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updatePassword, arg.ID, arg.HashedPassword)
 	var i User
 	err := row.Scan(
 		&i.ID,

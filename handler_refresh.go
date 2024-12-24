@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/samuelschmakel/chirpy/internal/auth"
 )
@@ -13,13 +14,20 @@ func (cfg *apiconfig) handlerRefresh(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	to, err := cfg.db.GetToken(req.Context(), tokenString)
+	// Next, validate the token:
+	userID, err := auth.ValidateJWT(tokenString, os.Getenv("SECRET_KEY"))
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid token", err)
+		return
+	}
+
+	rToken, err := cfg.db.GetTokenFromUser(req.Context(), userID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "couldn't find token from database", err)
 		return
 	}
 
-	if to.RevokedAt.Valid {
+	if rToken.RevokedAt.Valid {
 		respondWithError(w, http.StatusUnauthorized, "token is expired", err)
 		return
 	}

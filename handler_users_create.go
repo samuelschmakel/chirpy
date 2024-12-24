@@ -38,16 +38,18 @@ func (cfg *apiconfig) handlerUsersCreate(w http.ResponseWriter, req *http.Reques
 	hashedPassword, err := auth.HashPassword(params.Password)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+		return
 	}
 
-	passParams := database.AddPasswordParams{
+	passParams := database.UpdatePasswordParams{
 		ID:             user.ID,
 		HashedPassword: hashedPassword,
 	}
 
-	_, err = cfg.db.AddPassword(req.Context(), passParams)
+	_, err = cfg.db.UpdatePassword(req.Context(), passParams)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't store password", err)
+		return
 	}
 
 	respondWithJSON(w, http.StatusCreated, user)
