@@ -19,6 +19,7 @@ type apiconfig struct {
 	db             *database.Queries
 	platform       string
 	secretkey      string
+	polkakey       string
 }
 
 type User struct {
@@ -60,6 +61,7 @@ func main() {
 		db:             dbQueries,
 		platform:       platform,
 		secretkey:      os.Getenv("SECRET_KEY"),
+		polkakey:       os.Getenv("POLKA_KEY"),
 	}
 
 	fileSystem := http.Dir(filepathRoot)
