@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -8,26 +9,56 @@ import (
 )
 
 func (cfg *apiconfig) handlerChirpsRetrieve(w http.ResponseWriter, req *http.Request) {
-	s := req.URL.Query().Get("author_id")
-	authorID, err := uuid.Parse(s)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid user id", err)
+	authorIDString := req.URL.Query().Get("author_id")
+	sort := req.URL.Query().Get("sort")
+
+	if sort != "asc" && sort != "desc" && sort != "" {
+		respondWithError(w, http.StatusBadRequest, "invalid value for sort query parameter", fmt.Errorf("invalid query"))
 		return
+	}
+
+	var authorID uuid.UUID
+	var err error
+
+	if authorIDString != "" {
+		authorID, err = uuid.Parse(authorIDString)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid user id", err)
+			return
+		}
+	} else {
+		authorID, _ = uuid.Parse("")
 	}
 
 	var chirps []database.Chirp
 
-	if s != "" {
-		chirps, err = cfg.db.GetChirpsFromUser(req.Context(), authorID)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "invalid request", err)
-			return
+	if authorIDString != "" {
+		if sort != "desc" {
+			chirps, err = cfg.db.GetChirpsFromUser(req.Context(), authorID)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "invalid request", err)
+				return
+			}
+		} else {
+			chirps, err = cfg.db.GetChirpsFromUserDesc(req.Context(), authorID)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "invalid request", err)
+				return
+			}
 		}
 	} else {
-		chirps, err = cfg.db.GetChirps(req.Context())
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "invalid request", err)
-			return
+		if sort != "desc" {
+			chirps, err = cfg.db.GetChirps(req.Context())
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "invalid request", err)
+				return
+			}
+		} else {
+			chirps, err = cfg.db.GetChirpsDesc(req.Context())
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "invalid request", err)
+				return
+			}
 		}
 	}
 

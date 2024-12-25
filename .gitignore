@@ -2,3 +2,4 @@ chirpy
 out
 *.http
 .env
+database.json
