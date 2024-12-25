@@ -67,6 +67,7 @@ func (cfg *apiconfig) handlerUserLogin(w http.ResponseWriter, req *http.Request)
 		Email:        dbUser.Email,
 		Token:        tokenString,
 		RefreshToken: rTokenString,
+		IsChirpyRed:  dbUser.IsChirpyRed.Bool,
 	}
 
 	fmt.Printf("user data written in response: %v", user)

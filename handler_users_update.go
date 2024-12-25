@@ -89,6 +89,7 @@ func (cfg *apiconfig) handlerUsersUpdate(w http.ResponseWriter, req *http.Reques
 		UpdatedAt:    dbUser.UpdatedAt,
 		Email:        dbUser.Email,
 		RefreshToken: rToken.Token,
+		IsChirpyRed:  dbUser.IsChirpyRed.Bool,
 	}
 
 	respondWithJSON(w, http.StatusOK, user)
